@@ -33,11 +33,14 @@ end
 % --> 
 % -->
 
+indlon = find(min(woa.lon));
+indlat = find(min(woa.lat)); 
+
 %Determine the depth index within woa.depth that matches the depth of the
 %temperature sensor on the OOI flanking mooring B (the code I wrote later
 %will only work if you name this index "inddepth")
 % -->
-
+inddepth = woa.depth;
 %Now you will use the latitude, longitude, and depth indices from above to extract the
 %annual climatology of temperature at the location where the OOI flanking
 %mooring B data were collected
