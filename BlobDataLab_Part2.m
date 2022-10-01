@@ -1,4 +1,7 @@
-% BlobDataLab_OOIdata
+clc
+clear
+
+load("matlab.mat")
 
 %% 0. Read in files with WOA decadal mean monthly climatological temperature
 % I have written the code for this part for you, but I encourage you to
@@ -63,7 +66,7 @@ woa_papa_rep = [repmat(woa_papa,7,1); woa_papa(1:3)];
 %% 2b. Plot the WOA temperature time series along with the OOI temperature time series from Part 1
 % -->
 figure
-plot(timematcat,stempmmcat);
+plot(concatenated_station_papa_datenum_times, concatenated_station_papa_seawater_temperatures);
 hold on
 plot(woa_time',woa_papa_rep);
 datetick
@@ -79,7 +82,7 @@ legend(["SST","Climatology"])
 % data were collected (from your Part 1 analysis)
 % -->
 
-woa_interp = interp1(woa_time,woa_papa_rep,timematcat(1:10:end));
+woa_interp = interp1(woa_time, woa_papa_rep, concatenated_station_papa_datenum_times);
 
 %% 3b. Calculate the temperature anomaly as the difference between the OOI mooring
 % observations (using the smoothed data during good intervals) and the
@@ -88,14 +91,16 @@ woa_interp = interp1(woa_time,woa_papa_rep,timematcat(1:10:end));
 % -->
 
 % stempanom = stemp-woa_interp;
-stempmmanom = stempmmcat(1:10:end)-woa_interp;
+station_papa_seawater_temperature_anomaly = concatenated_station_papa_seawater_temperatures-woa_interp;
 
 
 %% 4. Plot the time series of the T anomaly you have now calculated by combining the WOA and OOI data
             
 figure
-plot(timematcat(1:10:end),stempmmanom)
+plot(concatenated_station_papa_datenum_times,station_papa_seawater_temperature_anomaly)
 datetick('x','yyyy')
+yline(0)
+grid("on")
 %% 5. Now bring in the satellite data observed at Ocean Station Papa
 
 %5a. Convert satellite time to MATLAB timestamp (following the same approach
@@ -103,12 +108,14 @@ datetick('x','yyyy')
 %timestamp and use the datenum function to make the conversion)
 % -->
 
-time = ncread("jplMURSST41anommday_1331_3f53_cf28.nc",'time');
-tAnom = ncread("jplMURSST41anommday_1331_3f53_cf28.nc",'sstAnom');
-lat = ncread("jplMURSST41anommday_1331_3f53_cf28.nc",'latitude');
-lon =  ncread("jplMURSST41anommday_1331_3f53_cf28.nc","longitude");
+satellite_filename = "jplMURSST41anommday_1331_3f53_cf28.nc";
 
-timemat = datenum(1970,1,1,0,0,time);
+satellite_raw_time_values = ncread(satellite_filename,'time');
+satellite_SST_anomaly = ncread(satellite_filename,'sstAnom');
+satellite_latitude = double(ncread(satellite_filename,'latitude'));
+satellite_longitude =  double(ncread(satellite_filename,"longitude"));
+
+satellite_datenum_time_values = datenum(1970,1,1,0,0,satellite_raw_time_values);
 
 %5b. In order to extract the satellite SSTanom data from the grid cell
 %nearest to OSP, calculate the indices of the longitude and latitude in the
@@ -116,7 +123,7 @@ timemat = datenum(1970,1,1,0,0,time);
 %Papa (as you did for the WOA data in Step 1 above)
 % -->
 % -->
-tAnomPapa = squeeze(tAnom(61,61,:));
+satellite_temperatures_at_station_papa = squeeze(satellite_SST_anomaly(61,61,:));
 
 %% 6. Plot the satellite SSTanom data extracted from Ocean Station Papa and
 %the mooring-based temperature anomaly calculated by combining the OOI and
@@ -124,7 +131,15 @@ tAnomPapa = squeeze(tAnom(61,61,:));
 %to your plot from step 4) so that you can compare the two records
 
 figure
-plot(timemat,tAnomPapa);
+plot(satellite_datenum_time_values, satellite_temperatures_at_station_papa);
 hold on
-plot(timematcat(1:10:end),stempmmanom)
-datetick
+plot(concatenated_station_papa_datenum_times, station_papa_seawater_temperature_anomaly)
+
+datetick('x','yyyy/mmm')
+ylabel("degC")
+xlabel("time")
+title("Comparison of buoy and satellite temperature anomaly at depth = 30m")
+legend(["Satellite data" "Buoy data"],"Box","off","AutoUpdate","off")
+xlim([woa_time(1) woa_time(end)])
+grid("on")
+yline(0)
